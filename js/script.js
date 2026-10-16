@@ -193,15 +193,30 @@
   }
   filterButtons.forEach(function (button) { button.addEventListener('click', function () { filterProjects(button.getAttribute('data-filter')); }); });
 
-  // Reveal transitions only activate if IntersectionObserver exists. Without it, all content stays visible.
+  // Reveal transitions replay when scrolling down or back up.
+  // Reduced-motion users and unsupported browsers are handled safely.
   if ('IntersectionObserver' in window && !reducedMotion) {
     root.classList.add('js-motion');
-    var revealObserver = new IntersectionObserver(function (entries, observer) {
+
+    var revealObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+        if (entry.isIntersecting) {
+          // Play the entrance animation when the element enters view.
+          entry.target.classList.add('is-visible');
+        } else {
+          // Reset the animation when the element leaves view.
+          // It can now animate again on the next scroll.
+          entry.target.classList.remove('is-visible');
+        }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -35px 0px' });
-    document.querySelectorAll('.reveal').forEach(function (element) { revealObserver.observe(element); });
+    }, {
+      threshold: 0.12,
+      rootMargin: '0px 0px -35px 0px'
+    });
+
+    document.querySelectorAll('.reveal').forEach(function (element) {
+      revealObserver.observe(element);
+    });
   }
 
   // Active navigation section and top progress indicator use passive scroll events.
